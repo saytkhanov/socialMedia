@@ -5,7 +5,7 @@
  * @format
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   TouchableOpacity,
@@ -67,6 +67,8 @@ const App = () => {
       profileImage: require('./assets/images/default_profile.png'),
     },
   ];
+  const [currentPage, setCurrentPage] = useState(1);
+
   return (
     <SafeAreaView>
       <View style={globalStyle.header}>
@@ -85,6 +87,7 @@ const App = () => {
           data={userStories}
           renderItem={({ item }) => (
             <UserStory
+              key={item.id}
               firstName={item.firstName}
               profileImage={item.profileImage}
             />
