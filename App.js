@@ -5,7 +5,7 @@
  * @format
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   SafeAreaView,
   TouchableOpacity,
@@ -18,6 +18,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import globalStyle from './assets/styles/globalStyle';
 import UserStory from './components/UserStory/UserStory';
+
+const USER_STORIES_PAGE_SIZE = 4;
 
 const App = () => {
   const userStories = [
@@ -67,7 +69,27 @@ const App = () => {
       profileImage: require('./assets/images/default_profile.png'),
     },
   ];
-  const [currentPage, setCurrentPage] = useState(1);
+
+  const [userStoriesCurrentPage, setUserStoriesCurrentPage] = useState(1);
+  const [userStoriesRenderedData, setUserStoriesRenderedData] = useState([]);
+  const [isLoadingUserStories, setIsLoadingUserStories] = useState(false);
+
+  const pagination = (database, currentPage, pageSize) => {
+    console.log(currentPage);
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    if (startIndex >= database.length) {
+      return [];
+    }
+    return database.slice(startIndex, endIndex);
+  };
+
+  useEffect(() => {
+    setIsLoadingUserStories(true);
+    const getInitialData = pagination(userStories, 1, USER_STORIES_PAGE_SIZE);
+    setUserStoriesRenderedData(getInitialData);
+    setIsLoadingUserStories(false);
+  }, []);
 
   return (
     <SafeAreaView>
@@ -82,12 +104,29 @@ const App = () => {
       </View>
       <View style={globalStyle.userStoryContainer}>
         <FlatList
+          onEndReachedThreshold={0.5}
+          onEndReached={() => {
+            if (isLoadingUserStories) {
+              return;
+            }
+            setIsLoadingUserStories(true);
+            const contentToAppend = pagination(
+              userStories,
+              userStoriesCurrentPage + 1,
+              USER_STORIES_PAGE_SIZE,
+            );
+            if (contentToAppend.length > 0) {
+              setUserStoriesCurrentPage(userStoriesCurrentPage + 1);
+              setUserStoriesRenderedData(prev => [...prev, ...contentToAppend]);
+            }
+            setIsLoadingUserStories(false);
+          }}
           showsHorizontalScrollIndicator={false}
           horizontal
-          data={userStories}
+          data={userStoriesRenderedData}
           renderItem={({ item }) => (
             <UserStory
-              key={item.id}
+              key={'userStory' + item.id}
               firstName={item.firstName}
               profileImage={item.profileImage}
             />
